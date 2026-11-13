@@ -280,55 +280,65 @@ useEffect(() => {
 }, [shop?.id]);
 
 
-  const handleAuth = async (e) => {
-    e.preventDefault();
-    setAuthBusy(true);
-    setAuthError("");
-    setAuthMessage("");
+const handleAuth = async (e) => {
+  e.preventDefault();
 
-    try {
-      if (authMode === "signup") {
-       const { data, error } = await supabase.auth.signInWithPassword({
-  email: authEmail.trim(),
-  password: authPassword,
-});
+  setAuthBusy(true);
+  setAuthError("");
+  setAuthMessage("");
 
-if (error) throw error;
-console.log("LOGIN SESSION:", !!data.session);
-console.log("LOGIN USER:", data.user?.email);
-console.log("STORAGE:", !!localStorage.getItem(
-  "sb-uzchuspimfyjpikrjper-auth-token"
-));
+  try {
+    if (authMode === "signup") {
+      // إنشاء حساب جديد
+      const { data, error } = await supabase.auth.signUp({
+        email: authEmail.trim(),
+        password: authPassword,
+      });
 
-if (!data.session) {
-  throw new Error("تم تسجيل الدخول ولكن لم يتم إنشاء جلسة.");
-}
+      if (error) throw error;
 
-setSession(data.session);
-setAuthReady(true);
+      if (data.session) {
+        setSession(data.session);
+        setAuthReady(true);
 
-console.log("تم تسجيل الدخول والجلسة موجودة:", !!data.session);
-        if (!data.session) {
-          setAuthMessage(
-            "تم إنشاء الحساب. راجع بريدك الإلكتروني لتأكيد الحساب."
-          );
-        } else {
-          setAuthMessage("تم إنشاء الحساب بنجاح.");
-        }
+        setAuthMessage("تم إنشاء الحساب وتسجيل الدخول بنجاح.");
       } else {
-        const { error } = await supabase.auth.signInWithPassword({
+        setAuthMessage(
+          "تم إنشاء الحساب بنجاح. راجع بريدك الإلكتروني لتأكيد الحساب، ثم سجّل الدخول."
+        );
+      }
+
+    } else {
+      // تسجيل الدخول
+      const { data, error } =
+        await supabase.auth.signInWithPassword({
           email: authEmail.trim(),
           password: authPassword,
         });
 
-        if (error) throw error;
+      if (error) throw error;
+
+      if (!data.session) {
+        throw new Error("تعذر إنشاء جلسة تسجيل الدخول.");
       }
-    } catch (error) {
-      setAuthError(error.message || "حدث خطأ، حاول مرة أخرى.");
-    } finally {
-      setAuthBusy(false);
+
+      setSession(data.session);
+      setAuthReady(true);
+      setAuthMessage("تم تسجيل الدخول بنجاح.");
     }
-  };
+
+  } catch (error) {
+    console.error("Authentication error:", error);
+
+    setAuthError(
+      error.message || "حدث خطأ، حاول مرة أخرى."
+    );
+
+  } finally {
+    setAuthBusy(false);
+  }
+};
+
 
  
 
