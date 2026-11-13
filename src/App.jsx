@@ -288,6 +288,7 @@ const handleAuth = async (e) => {
   setAuthMessage("");
 
   try {
+    console.log("AUTH MODE:", authMode);
     if (authMode === "signup") {
       // إنشاء حساب جديد
       const { data, error } = await supabase.auth.signUp({
